@@ -3,6 +3,8 @@ using System.Linq;
 
 namespace TemplateEngine.Docx
 {
+	public delegate byte[] ImageFactory(string tag, double widthCm, double heightCm);
+
 	[ContentItemName("Image")]
 	public class ImageContent : HiddenContent<ImageContent>, IEquatable<ImageContent>
     {
@@ -17,7 +19,14 @@ namespace TemplateEngine.Docx
             Binary = binary;
         }
 
+	    public ImageContent(string name, ImageFactory factory)
+	    {
+		    Name = name;
+		    Factory = factory;
+	    }
+
         public byte[] Binary { get; set; }
+		public ImageFactory Factory { get; set; }
 
         #region Equals
 
@@ -25,8 +34,9 @@ namespace TemplateEngine.Docx
 		{
 			if (other == null) return false;
 
-			return Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase) &&
-			       Binary.SequenceEqual(other.Binary);
+			if (!Name.Equals(other.Name, StringComparison.InvariantCultureIgnoreCase)) return false;
+			if (Binary == null) return Factory.Equals(other.Factory);
+			return Binary.SequenceEqual(other.Binary);
 		}
 
 		public override bool Equals(IContentItem other)
@@ -38,7 +48,7 @@ namespace TemplateEngine.Docx
 
 		public override int GetHashCode()
 		{
-			return new {Name, Binary}.GetHashCode();
+			return new {Name, Binary, Factory}.GetHashCode();
 		}
 
 		#endregion

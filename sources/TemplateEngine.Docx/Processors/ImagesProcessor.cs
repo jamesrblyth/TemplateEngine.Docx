@@ -65,7 +65,7 @@ namespace TemplateEngine.Docx.Processors
             }
 		    else
 		    {
-		        var blip = contentControl.DescendantsAndSelf(A.blip).First();
+		        var blip = contentControl.DescendantsAndSelf(A.blip).FirstOrDefault();
 		        if (blip == null)
 		        {
 		            processResult.AddError(new CustomContentItemError(field, "doesn't contain an image for replace"));
@@ -81,7 +81,22 @@ namespace TemplateEngine.Docx.Processors
 		            _context.Document.RemovePartById(imageId);
 		        }
 
-		        var imagePartId = _context.Document.AddImagePart(field.Binary);
+				var binary = field.Binary;
+
+				if (binary == null)
+				{
+					var extent = contentControl.DescendantsAndSelf(A.ext).FirstOrDefault(x => x.Attribute("cx") != null);
+					if (extent == null)
+					{
+						processResult.AddError(new CustomContentItemError(field, "has no defined size"));
+						return processResult;
+					}
+					var widthCm = int.Parse(extent.Attribute("cx").Value) / 360000.0;
+					var heightCm = int.Parse(extent.Attribute("cy").Value) / 360000.0;
+					binary = field.Factory?.Invoke(field.Name, widthCm, heightCm);
+				}
+
+		        var imagePartId = _context.Document.AddImagePart(binary);
 
 		        blip.Attribute(R.embed).SetValue(imagePartId);
             }                    

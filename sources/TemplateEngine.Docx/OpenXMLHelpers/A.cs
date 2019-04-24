@@ -9,5 +9,7 @@ namespace TemplateEngine.Docx
         public static XName blip = a + "blip";   
 
         public static XName graphic = a + "graphic";
+
+        public static XName ext = a + "ext";
     }
 }
