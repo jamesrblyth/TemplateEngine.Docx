@@ -29,7 +29,7 @@ namespace TemplateEngine.Docx.Processors
         private PropagationProcessResult PropagatePrototype(Prototype prototype, IEnumerable<Content> content)
         {
             var processResult = new PropagationProcessResult();
-            var newRows = new List<XElement>();
+            var newRows = new XElement("tmpParent");
 
             foreach (var contentItem in content)
             {
@@ -44,7 +44,8 @@ namespace TemplateEngine.Docx.Processors
                         newRows.Add(newElement);
                         continue;
                     }
-
+					
+                    newRows.Add(newElement);
                     foreach (var sdt in newElement.FirstLevelDescendantsAndSelf(W.sdt).ToList())
                     {
                         var fieldContent = contentItem.GetContentItem(sdt.SdtTagName());
@@ -63,10 +64,9 @@ namespace TemplateEngine.Docx.Processors
 
                         processResult.Merge(contentProcessResult);
                     }
-                    newRows.Add(newElement);
                 }
             }
-            processResult.Result = newRows;
+            processResult.Result = newRows.Elements().ToList();
             return processResult;
         }
         private ProcessResult FillContent(XElement contentControl, IContentItem item)
@@ -207,8 +207,11 @@ namespace TemplateEngine.Docx.Processors
 				fieldNames = fieldNames.ToList();
 
 				// All elements inside list control content are included to the prototype.
-				var listItems = listContentControl
+				listContentControl = listContentControl
 					.Element(W.sdtContent)
+					.Element(W.sdt)
+					.Element(W.sdtContent);
+				var listItems = listContentControl
 					.Elements()
 					.ToList();
 
@@ -219,7 +222,7 @@ namespace TemplateEngine.Docx.Processors
 				if (fieldNames.Any(fn => !tagsInPrototype.Contains(fn)))
 				{
 					IsValid = false;
-					return;
+					//return;
 				}
 
 				IsValid = true;
